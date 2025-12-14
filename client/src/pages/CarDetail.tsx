@@ -421,34 +421,74 @@ export default function CarDetail() {
                       <TableHead>Brand</TableHead>
                       <TableHead className="text-right">Quantity</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Price/L</TableHead>
                       <TableHead className="text-right">Odometer</TableHead>
+                      <TableHead className="text-right">Distance</TableHead>
+                      <TableHead className="text-right">L/100km</TableHead>
+                      <TableHead className="text-right">km/L</TableHead>
+                      <TableHead className="text-right">Cost/km</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {fuelLogs.map((log) => (
-                      <TableRow key={log.id} data-testid={`row-fuel-${log.id}`}>
-                        <TableCell>{format(log.date, 'MMM d, yyyy')}</TableCell>
-                        <TableCell>{log.brand || '-'}</TableCell>
-                        <TableCell className="text-right tabular-nums">{log.quantity} L</TableCell>
-                        <TableCell className="text-right">
-                          <CurrencyDisplay amount={log.amountPaid} />
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {log.odometer.toLocaleString()} km
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteTarget({ type: 'fuel', id: log.id, name: 'this fuel log' })}
-                            data-testid={`button-delete-fuel-${log.id}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {fuelLogs.map((log, index) => {
+                      const pricePerLiter = log.quantity > 0 ? log.amountPaid / log.quantity : 0;
+                      
+                      // Find previous log by odometer to calculate statistics
+                      const sortedLogs = [...fuelLogs].sort((a, b) => a.odometer - b.odometer);
+                      const currentIndex = sortedLogs.findIndex(l => l.id === log.id);
+                      const previousLog = currentIndex > 0 ? sortedLogs[currentIndex - 1] : null;
+                      
+                      const distance = previousLog ? log.odometer - previousLog.odometer : null;
+                      const litersPer100km = distance && distance > 0 && log.quantity > 0 
+                        ? (log.quantity / distance) * 100 
+                        : null;
+                      const kmPerLiter = distance && distance > 0 && log.quantity > 0
+                        ? distance / log.quantity
+                        : null;
+                      const costPerKm = distance && distance > 0
+                        ? log.amountPaid / distance
+                        : null;
+
+                      return (
+                        <TableRow key={log.id} data-testid={`row-fuel-${log.id}`}>
+                          <TableCell>{format(log.date, 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{log.brand || '-'}</TableCell>
+                          <TableCell className="text-right tabular-nums">{log.quantity} L</TableCell>
+                          <TableCell className="text-right">
+                            <CurrencyDisplay amount={log.amountPaid} />
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            <CurrencyDisplay amount={pricePerLiter} />
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {log.odometer.toLocaleString()} km
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums text-muted-foreground">
+                            {distance !== null ? `${distance.toLocaleString()} km` : '-'}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {litersPer100km !== null ? litersPer100km.toFixed(2) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums font-medium">
+                            {kmPerLiter !== null ? kmPerLiter.toFixed(2) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {costPerKm !== null ? <CurrencyDisplay amount={costPerKm} /> : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteTarget({ type: 'fuel', id: log.id, name: 'this fuel log' })}
+                              data-testid={`button-delete-fuel-${log.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
