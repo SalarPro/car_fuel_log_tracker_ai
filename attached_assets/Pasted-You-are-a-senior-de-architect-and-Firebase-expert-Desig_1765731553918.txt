@@ -1,0 +1,38 @@
+You are a senior de architect and Firebase expert.
+
+Design and implement a car management & expense tracking application with the following requirements:
+
+Core Tech Stack • Authentication: Firebase Authentication • Database: Firebase Firestore • Each user’s data must be fully isolated and secure using Firebase Security Rules
+
+⸻
+
+User Management • Users can register and log in using Email & Password • Authentication handled exclusively via Firebase Auth • User profile stored in Firestore
+
+⸻
+
+Car Management • Each user can add multiple cars • Each car contains: • Car name / model • Plate number (optional) • Initial odometer • Created timestamp
+
+⸻
+
+Features Per Car
+
+Fuel Tracking Track every fuel refill with: • Date • Amount paid • Fuel quantity (liters) • Odometer reading at refill • Fuel brand name • Notes (optional)
+Rules: • User can select currency in Settings • Default currency: IQD • Currency applies across all monetary values • Data must allow future fuel consumption analytics (km/L, cost per km)
+
+⸻
+
+Car Service Tracker Track all maintenance services: • Service name (e.g. Oil Change, Brake Service) • Service price • Odometer at service • Description / notes • Next service reminder odometer (need attention odometer) • Auto-flag services as “Needs Attention” when current odometer reaches or exceeds reminder value
+⸻
+
+Car Expense Tracker Track non-fuel, non-service expenses: • Expense name (e.g. Insurance, Car Wash, Parking) • Amount • Date • Odometer (optional) • Description • Category support (future-ready)
+⸻
+
+Settings • Currency selector (default IQD) • Data must be stored per user • Changing currency should not break historical data
+
+⸻
+
+Data Structure (High Level) • users • userId • profile • settings • cars • carId • fuel_logs • services • expenses
+
+⸻
+
+Additional Requirements • Clean, scalable Firestore schema • Offline support with Firestore caching • Input validation (odometer must always increase logically) • Prepared for analytics and charts later • Production-ready Firebase security rules
