@@ -1,0 +1,150 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+ 
+    
+    // User data rules
+    match /users/{userId} {
+      // Users collection documents are not directly used, but we need the rule for subcollections
+      allow read, write: if false;
+      
+      // User settings subcollection
+      match /settings/{settingId} {
+        // Only authenticated user can read/write their own settings
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) 
+          && request.resource.data.keys().hasAll(['currency', 'createdAt', 'updatedAt'])
+          && request.resource.data.currency is string;
+        allow update: if isOwner(userId)
+          && request.resource.data.currency is string;
+        allow delete: if isOwner(userId);
+      }
+      
+      // Cars subcollection
+      match /cars/{carId} {
+        // Only authenticated user can read/write their own cars
+        allow read: if isOwner(userId);
+        
+        allow create: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['name', 'plateNumber', 'initialOdometer', 'currentOdometer', 'createdAt', 'updatedAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.plateNumber is string
+          && request.resource.data.initialOdometer is number
+          && request.resource.data.initialOdometer >= 0
+          && request.resource.data.currentOdometer is number
+          && request.resource.data.currentOdometer >= 0;
+        
+        allow update: if isOwner(userId)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.currentOdometer is number
+          && request.resource.data.currentOdometer >= 0;
+        
+        allow delete: if isOwner(userId);
+        
+        // Fuel logs subcollection
+        match /fuel_logs/{logId} {
+          allow read: if isOwner(userId);
+          
+          allow create: if isOwner(userId)
+            && request.resource.data.keys().hasAll(['date', 'amountPaid', 'quantity', 'odometer', 'brand', 'notes', 'createdAt'])
+            && request.resource.data.amountPaid is number
+            && request.resource.data.amountPaid >= 0
+            && request.resource.data.quantity is number
+            && request.resource.data.quantity >= 0
+            && request.resource.data.odometer is number
+            && request.resource.data.odometer >= 0
+            && request.resource.data.brand is string
+            && request.resource.data.notes is string;
+          
+          allow update: if isOwner(userId)
+            && request.resource.data.amountPaid is number
+            && request.resource.data.amountPaid >= 0
+            && request.resource.data.quantity is number
+            && request.resource.data.quantity >= 0
+            && request.resource.data.odometer is number
+            && request.resource.data.odometer >= 0
+            && request.resource.data.brand is string
+            && request.resource.data.notes is string;
+          
+          allow delete: if isOwner(userId);
+        }
+        
+        // Services subcollection
+        match /services/{serviceId} {
+          allow read: if isOwner(userId);
+          
+          allow create: if isOwner(userId)
+            && request.resource.data.keys().hasAll(['name', 'price', 'odometer', 'description', 'reminderOdometer', 'createdAt'])
+            && request.resource.data.name is string
+            && request.resource.data.name.size() > 0
+            && request.resource.data.price is number
+            && request.resource.data.price >= 0
+            && request.resource.data.odometer is number
+            && request.resource.data.odometer >= 0
+            && request.resource.data.description is string
+            && request.resource.data.reminderOdometer is number
+            && request.resource.data.reminderOdometer >= 0;
+          
+          allow update: if isOwner(userId)
+            && request.resource.data.name is string
+            && request.resource.data.name.size() > 0
+            && request.resource.data.price is number
+            && request.resource.data.price >= 0
+            && request.resource.data.odometer is number
+            && request.resource.data.odometer >= 0
+            && request.resource.data.description is string
+            && request.resource.data.reminderOdometer is number
+            && request.resource.data.reminderOdometer >= 0;
+          
+          allow delete: if isOwner(userId);
+        }
+        
+        // Expenses subcollection
+        match /expenses/{expenseId} {
+          allow read: if isOwner(userId);
+          
+          allow create: if isOwner(userId)
+            && request.resource.data.keys().hasAll(['name', 'amount', 'date', 'odometer', 'description', 'category', 'createdAt'])
+            && request.resource.data.name is string
+            && request.resource.data.name.size() > 0
+            && request.resource.data.amount is number
+            && request.resource.data.amount >= 0
+            && (request.resource.data.odometer == null || (request.resource.data.odometer is number && request.resource.data.odometer >= 0))
+            && request.resource.data.description is string
+            && request.resource.data.category is string
+            && request.resource.data.category.size() > 0;
+          
+          allow update: if isOwner(userId)
+            && request.resource.data.name is string
+            && request.resource.data.name.size() > 0
+            && request.resource.data.amount is number
+            && request.resource.data.amount >= 0
+            && (request.resource.data.odometer == null || (request.resource.data.odometer is number && request.resource.data.odometer >= 0))
+            && request.resource.data.description is string
+            && request.resource.data.category is string
+            && request.resource.data.category.size() > 0;
+          
+          allow delete: if isOwner(userId);
+        }
+      }
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
